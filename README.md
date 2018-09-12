@@ -1,12 +1,14 @@
 # real-m3u8-url-batch-downloader
 this is a  m3u8 url batch download tool by a  python beginner.  Test in Windows, but support for linux and MacOS maye. Only for study.
 
+```
 **Usage**:
     -u       m3u8 URL address,should be used with -o together
     -o       output media's name, should be used with -u together
     -r       restore last uncomplete task
     -s       show if exists uncomplete task
     -h       this message.
+```
 
 for example, create a new online m3u8 download task, where m3u8 URI locate at http://live.us.sinaimg.cn/003KBuuJjx07mnPN1eFh070d01000pkH0k01.m3u8 , you could execute the following command in Windows original CMD shell or  nice console emulators, such as `cmder`:
 
