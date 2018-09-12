@@ -24,14 +24,17 @@ you should download all .exe file in this Repo with start.py in same path.
 
 you should download and install `aria2c`,  `FFmpeg`.
 
+**For Mac user:**
+should brew download and install `aria2`,`ffmpeg`.
+
 **TODO**:
 
 1. show uncomplete task.
 2. expose more aria2c control parameters to user, a new aria2c configure file maybe a good idea.
-3. change system call `rmdir, rm` to compatible witch Mac or Linux systems.
+3. change system call `rmdir, rm` to compatible with Mac or Linux systems.
 4. add sniffer or crawl method to make correct m3u8 URI easy.
 5. parse m3u8 format more **compatible**,refer to [globocom/*m3u8*](https://github.com/globocom/m3u8)
-6. parse URL more **comprehensive**,  refer to **urlparse** or [**urllib.parse**](https://docs.python.org/3/library/urllib.parse.html)
+6. parse URL more **comprehensive**,  refer to [**urlparse**](https://docs.python.org/2.7/library/urlparse.html) or [**urllib.parse**](https://docs.python.org/3/library/urllib.parse.html)
 7. refactoring  code with python3.
 
 **More Reference**:
