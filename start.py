@@ -140,8 +140,7 @@ def continuedownload(parameter_list):
 #     }
 #   ]
 # }
-def generatedownloadhistory(uri, outputfilename):
-    #查找URI是否存在 
+def generatedownloadhistory(uri, outputfilename): 
     urlExitsInFile=False
     data={}
     data['Resources'] = []  
@@ -191,10 +190,8 @@ def startdownload():
 #purge tmp space
 def purgetmpspace():
     import shutil
-    shutil.rmtree('./output1')
-    #os.mkdir('./output1')  
-    cmd1 = "del *.ts"
-    os.system(cmd1)
+    shutil.rmtree('./output1') 
+    os.remove("tmp1.ts")
 
 #show uncomplete task
 def showuncompletetask():
@@ -202,7 +199,7 @@ def showuncompletetask():
 
 if __name__ == "__main__":
     reload(sys) 
-    sys.setdefaultencoding('utf8')    #utf-8 python2.7 error
+    sys.setdefaultencoding('utf8')    #fix utf8 character coding bug of python2.7 
     showuncomplete, restoreuncomplete,url,outputfilename=parseargv()
     if showuncomplete == True:
         showuncompletetask()

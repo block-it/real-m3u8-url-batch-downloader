@@ -12,8 +12,21 @@ this is a  m3u8 url batch download tool by a  python beginner.  Test in Windows,
 
 for example, create a new online m3u8 download task, where m3u8 URI locate at http://live.us.sinaimg.cn/003KBuuJjx07mnPN1eFh070d01000pkH0k01.m3u8 , you could execute the following command in Windows original CMD shell or  nice console emulators, such as `cmder`:
 
-python start.py -u http://live.us.sinaimg.cn/003KBuuJjx07mnPN1eFh070d01000pkH0k01.m3u8 -o 2018ICS中国.mp4
+`python start.py -u http://live.us.sinaimg.cn/003KBuuJjx07mnPN1eFh070d01000pkH0k01.m3u8 -o 2018ICS中国.mp4`
 
+
+
+**Features:**
+
+1. concurrence batch download online m3u8.
+
+2. auto merge all ts file to one file.
+
+3. continue download last uncomplete task.
+
+   `python start.py -r`
+
+4. save download list file(`history.json`) in UTF-8 Character coding,  and downloaded file name support UNICODE and ASCII by ``` sys.getfilesystemcoding()```
 
 
 **For Windows User:**
@@ -22,10 +35,13 @@ you should download all .exe file in this Repo with start.py in same path.
 
 **For Linux user:**
 
-you should download and install `aria2c`,  `FFmpeg`.
+you should download and install `aria2`,  `FFmpeg`.
 
 **For Mac user:**
+
 should brew download and install `aria2`,`ffmpeg`.
+
+
 
 **TODO**:
 
