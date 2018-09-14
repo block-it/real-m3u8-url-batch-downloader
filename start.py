@@ -100,8 +100,7 @@ def mergets(tscachedir, mergedtsfilename):
     if(len(ls)>0):
         outputfile = open(mergedtsfilename, 'wb')
         for one in ls:
-            #cmd1 = 'cat %s/%s >> %s'%(tscachedir, one, mergedtsfilename) 
-            #catb(tscachedir+one) >> mergedtsfilename
+            #cmd1 = 'cat %s/%s >> %s'%(tscachedir, one, mergedtsfilename)
             #if os.system(cmd1) == 0:
             #    print "merged ",tscachedir,"/", one
             
@@ -228,8 +227,8 @@ if __name__ == "__main__":
         
         generatedownloaduris(url)
         print >> sys.stdout, "\033[1:37;42mGernerate Download URIS:\033[0m complete."
-        #startdownload(tscachedir)
-        #print >> sys.stdout, "\033[1:37;42mAll TS files:\033[0m downloaded."
+        startdownload(tscachedir)
+        print >> sys.stdout, "\033[1:37;42mAll TS files:\033[0m downloaded."
     #now merge ts file
     mergets(tscachedir, mergedtsfilename)
     print >> sys.stdout, "\033[1:37;42mMerge all TS files:\033[0m complete."
