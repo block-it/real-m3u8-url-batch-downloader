@@ -55,7 +55,6 @@ def parseargv(argv=None):
                     Usage()
                     sys.exit()
             if restoreuncomplete == False and showuncomplete == False:
-                #开启新的下载任务
                 if  len(sys.argv)!=5:
                     Usage()
                     sys.exit()
@@ -92,17 +91,29 @@ def generatedownloaduris(url):
         f.writelines(downuri)
 
 #merge ts file
-def mergets(tschachedir, mergedtsfilename):
+def mergets(tscachedir, mergedtsfilename):
     ls=[]
     with open("urilist.txt") as f:
         for line in f:
             if line.startswith('http') and line[len(line)-2:]=='s\n':
                 ls.append(line[line.rindex('/'):][:-1]) 
     if(len(ls)>0):
+        outputfile = open(mergedtsfilename, 'wb')
         for one in ls:
-            cmd1 = 'cat %s/%s >> %s'%(tschachedir, one, mergedtsfilename) 
-            if os.system(cmd1) == 0:
-                print "merged ",tschachedir,"/", one
+            #cmd1 = 'cat %s/%s >> %s'%(tscachedir, one, mergedtsfilename) 
+            #catb(tscachedir+one) >> mergedtsfilename
+            #if os.system(cmd1) == 0:
+            #    print "merged ",tscachedir,"/", one
+            
+            inputfile=open(os.path.join(tscachedir, one[1:]), 'rb')
+            while 1:
+                filebytes = inputfile.read(1024)
+                if not filebytes: break
+                outputfile.write(filebytes) 
+            print "merged ",os.path.join(tscachedir, one[1:])
+            inputfile.close()
+        outputfile.flush()
+        outputfile.close()
  
 
 #convert ts stream file to mp4 file
@@ -111,12 +122,12 @@ def ts2mp4(outputfilename):
     os.system(cmd1)
 
 #continue download
-def continuedownload(tschachedir):
+def continuedownload(tscachedir):
     cmd1=''
     if os.path.exists("out.txt"):
         cmd1 = "aria2c -c -iout.txt -j10 --save-session=out.txt  "
     else:
-        cmd1 = "aria2c -c -x4 -d %s -iurilist.txt -j10 --save-session=out.txt  "%(tschachedir)
+        cmd1 = "aria2c -c -x4 -d %s -iurilist.txt -j10 --save-session=out.txt  "%(tscachedir)
     os.system(cmd1)
 
 #generate download history
@@ -175,7 +186,7 @@ def savedownloadjob():
     pass
 
 #start download
-def startdownload(tschachedir):
+def startdownload(tscachedir):
     #cmd = '%s'%('aria2c -c -x4 -d output1 -iurilist.txt -j10 --save-session=out.txt')
     #print cmd
     #p=subprocess.Popen(cmd,stdin = subprocess.PIPE, \
@@ -184,13 +195,13 @@ def startdownload(tschachedir):
     #if p.returncode == 0:
     #    print "stdout:%s" %p.stdout.read()
         #pass
-    cmd1 = "aria2c -c -x4 -d %s -iurilist.txt -j10 --save-session=out.txt  "%(tschachedir)
+    cmd1 = "aria2c -c -x4 -d %s -iurilist.txt -j10 --save-session=out.txt  "%(tscachedir)
     os.system(cmd1)
 
 #purge tmp space
-def purgetmpspace(tschachedir, mergedtsfilename):
+def purgetmpspace(tscachedir, mergedtsfilename):
     import shutil
-    shutil.rmtree(tschachedir) 
+    shutil.rmtree(tscachedir) 
     os.remove(mergedtsfilename)
 
 #show uncomplete task
@@ -202,23 +213,26 @@ if __name__ == "__main__":
     sys.setdefaultencoding('utf8')    #fix utf8 character coding bug of python2.7 
     showuncomplete, restoreuncomplete,url,outputfilename=parseargv()
     mergedtsfilename='tmp1.ts'
-    tschachedir="./output1"
+    tscachedir="./output1"
     if showuncomplete == True:
         showuncompletetask()
         sys.exit(0)
 
     if restoreuncomplete == True:
         print "continue"
-        continuedownload(tschachedir)
+        continuedownload(tscachedir)
     
     if url != '' and outputfilename != '' :        
         generatedownloadhistory(url, outputfilename)
+        print >> sys.stdout, "\033[1:37;42mGernerate Download History:\033[0m complete."
         
         generatedownloaduris(url)
-        startdownload(tschachedir)
-    
+        print >> sys.stdout, "\033[1:37;42mGernerate Download URIS:\033[0m complete."
+        #startdownload(tscachedir)
+        #print >> sys.stdout, "\033[1:37;42mAll TS files:\033[0m downloaded."
     #now merge ts file
-    mergets(tschachedir, mergedtsfilename)
+    mergets(tscachedir, mergedtsfilename)
+    print >> sys.stdout, "\033[1:37;42mMerge all TS files:\033[0m complete."
 
     filename='NONAME.mp4'
     if outputfilename!='' :
@@ -247,11 +261,11 @@ if __name__ == "__main__":
                     p['state'] ='complete' 
         
     j=json.dumps(data, ensure_ascii=False, indent=4)
-    print j
+    #print j
     with open('history.json', 'w') as outfile:  
         print >> outfile, j
 
-    purgetmpspace(tschachedir, mergedtsfilename)
+    purgetmpspace(tscachedir, mergedtsfilename)
     
     print >> sys.stdout, "\033[1:37;42mDwonload:\033[0m complete."
 
