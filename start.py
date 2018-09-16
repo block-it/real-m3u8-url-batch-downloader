@@ -67,11 +67,14 @@ def parseargv(argv=None):
     except Usage:
         sys.exit(2)
 
+def url2id(url):
+    return uuid.uuid5(uuid.NAMESPACE_URL,url).__str__() 
+
 #generate one m3u8's  download uris
-def generatedownloaduris(url):
+def generatedownloaduris(dir, url):
     uri=url[:url.rindex('/')]
     downuri=[]
-    with open('urilist.txt', 'w') as f:
+    with open(os.path.join(dir,'urilist.txt'), 'w') as f:
         req = urllib2.Request(url)
         res = urllib2.urlopen(req)
         res = res.read()
@@ -93,17 +96,13 @@ def generatedownloaduris(url):
 #merge ts file
 def mergets(tscachedir, mergedtsfilename):
     ls=[]
-    with open("urilist.txt") as f:
+    with open(os.path.join(tscachedir,"urilist.txt")) as f:
         for line in f:
             if line.startswith('http') and line[len(line)-2:]=='s\n':
                 ls.append(line[line.rindex('/'):][:-1]) 
     if(len(ls)>0):
         outputfile = open(mergedtsfilename, 'wb')
-        for one in ls:
-            #cmd1 = 'cat %s/%s >> %s'%(tscachedir, one, mergedtsfilename)
-            #if os.system(cmd1) == 0:
-            #    print "merged ",tscachedir,"/", one
-            
+        for one in ls:         
             inputfile=open(os.path.join(tscachedir, one[1:]), 'rb')
             while 1:
                 filebytes = inputfile.read(1024)
@@ -117,17 +116,40 @@ def mergets(tscachedir, mergedtsfilename):
 
 #convert ts stream file to mp4 file
 def ts2mp4(outputfilename):
-    cmd1 = "ffmpeg -y -i %s  -vcodec copy -acodec copy -vbsf h264_mp4toannexb %s"%(mergedtsfilename, outputfilename)
+    cmd1 = "ffmpeg -y -i %s  -vcodec copy -acodec copy -vbsf h264_mp4toannexb %s"%(outputfilename+'.ts', outputfilename)
+    os.system(cmd1)
+
+#start download
+def startdownload(tscachedir):
+    #cmd = '%s'%('aria2c -c -x4 -d output1 -iurilist.txt -j10 --save-session=out.txt')
+    #print cmd
+    #p=subprocess.Popen(cmd,stdin = subprocess.PIPE, \
+    #        stdout = subprocess.PIPE, stderr = subprocess.PIPE, shell = False)
+    #p.wait()
+    #if p.returncode == 0:
+    #    print "stdout:%s" %p.stdout.read()
+        #pass
+    cmd1 = "aria2c -c -x4 -d %s -i%s/urilist.txt -j10 --save-session=%s/out.txt  "%(tscachedir, tscachedir,tscachedir)
     os.system(cmd1)
 
 #continue download
-def continuedownload(tscachedir):
-    cmd1=''
-    if os.path.exists("out.txt"):
-        cmd1 = "aria2c -c -iout.txt -j10 --save-session=out.txt  "
-    else:
-        cmd1 = "aria2c -c -x4 -d %s -iurilist.txt -j10 --save-session=out.txt  "%(tscachedir)
-    os.system(cmd1)
+def continuedownload():
+    with open('history.json') as json_file:  
+        data = json.load(json_file)
+        for p in data['Resources']:
+            if p['state'] == 'downloading':
+                filename = p['OPName'].decode('UTF-8').encode(sys.getfilesystemencoding())
+                tempdir=os.path.join(os.path.dirname(filename), p['id'])
+                ctask=os.path.join(tempdir,"out.txt")
+                if(os.path.exists(ctask)):
+                    cmd1="aria2c -c -i%s --save-session=%s"%(ctask,ctask)
+                    os.system(cmd1)
+                else:
+                    startdownload(tempdir)
+                mergets(tempdir, filename+".ts")
+                ts2mp4(filename)
+                setdownloadcomplete(p['URL'])
+                purgetmpspace(tempdir, filename+'.ts')
 
 #generate download history
 #save this task to local json formatted file
@@ -165,11 +187,10 @@ def generatedownloadhistory(uri, outputfilename):
     except:
         pass
     if urlExitsInFile == False:
-        id = uuid.uuid5(uuid.NAMESPACE_URL,uri) 
         data['Resources'].append({  
-            'id': id.__str__(),
+            'id': url2id(uri),
             'URL': uri,
-            'OPName': outputfilename.decode(sys.getfilesystemencoding()).encode('UTF-8'),
+            'OPName': os.path.abspath(outputfilename).decode(sys.getfilesystemencoding()).encode('UTF-8'),
             'timestamp':datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             'state':'downloading'
         })
@@ -184,18 +205,25 @@ def generatedownloadhistory(uri, outputfilename):
 def savedownloadjob():
     pass
 
-#start download
-def startdownload(tscachedir):
-    #cmd = '%s'%('aria2c -c -x4 -d output1 -iurilist.txt -j10 --save-session=out.txt')
-    #print cmd
-    #p=subprocess.Popen(cmd,stdin = subprocess.PIPE, \
-    #        stdout = subprocess.PIPE, stderr = subprocess.PIPE, shell = False)
-    #p.wait()
-    #if p.returncode == 0:
-    #    print "stdout:%s" %p.stdout.read()
-        #pass
-    cmd1 = "aria2c -c -x4 -d %s -iurilist.txt -j10 --save-session=out.txt  "%(tscachedir)
-    os.system(cmd1)
+def setdownloadcomplete(uri):
+    needwrite=False
+    data={}
+    with open('history.json', 'r+') as json_file: 
+        data = json.load(json_file)
+        for p in data['Resources']:
+            print p['URL']
+            print uri
+            print
+            if p['state'] == 'downloading' and p['URL'] == uri:
+                p['state'] ='complete'
+                needwrite=True
+                break 
+
+    if needwrite==True:    
+        j=json.dumps(data, ensure_ascii=False, indent=4)
+    #print j
+        with open('history.json', 'w') as outfile:  
+            print >> outfile, j
 
 #purge tmp space
 def purgetmpspace(tscachedir, mergedtsfilename):
@@ -211,60 +239,40 @@ if __name__ == "__main__":
     reload(sys) 
     sys.setdefaultencoding('utf8')    #fix utf8 character coding bug of python2.7 
     showuncomplete, restoreuncomplete,url,outputfilename=parseargv()
-    mergedtsfilename='tmp1.ts'
-    tscachedir="./output1"
+    
     if showuncomplete == True:
         showuncompletetask()
         sys.exit(0)
 
     if restoreuncomplete == True:
         print "continue"
-        continuedownload(tscachedir)
+        continuedownload()
     
-    if url != '' and outputfilename != '' :        
+    if url != '' and outputfilename != '' :  
         generatedownloadhistory(url, outputfilename)
         print >> sys.stdout, "\033[1:37;42mGernerate Download History:\033[0m complete."
         
-        generatedownloaduris(url)
+        outputdir=os.path.dirname(os.path.abspath(outputfilename)) 
+        tempdir=os.path.join(outputdir,url2id(url))
+        if not os.path.exists(tempdir): os.makedirs(tempdir)     
+
+        generatedownloaduris(tempdir, url)
         print >> sys.stdout, "\033[1:37;42mGernerate Download URIS:\033[0m complete."
-        startdownload(tscachedir)
+
+        startdownload(tempdir)
         print >> sys.stdout, "\033[1:37;42mAll TS files:\033[0m downloaded."
-    #now merge ts file
-    mergets(tscachedir, mergedtsfilename)
-    print >> sys.stdout, "\033[1:37;42mMerge all TS files:\033[0m complete."
-
-    filename='NONAME.mp4'
-    if outputfilename!='' :
-        filename = outputfilename
-    else:
-        data = {}
-        with open('history.json') as json_file:  
-            data = json.load(json_file)
-            for p in data['Resources']:
-                if p['state'] == 'downloading':
-                    if p['OPName'] != '':
-                        filename = p['OPName'].decode('UTF-8').encode(sys.getfilesystemencoding())
-                    p['state'] ='complete'
-                break
-
-    ts2mp4(filename)
-
-    
-    with open('history.json', 'r+') as json_file: 
-        data = json.load(json_file)
-        if outputfilename!='':
-            for p in data['Resources']:
-                if p['state'] == 'downloading':
-                    if p['OPName'] != '':
-                        filename = p['OPName'].decode('UTF-8').encode(sys.getfilesystemencoding())
-                    p['state'] ='complete' 
         
-    j=json.dumps(data, ensure_ascii=False, indent=4)
-    #print j
-    with open('history.json', 'w') as outfile:  
-        print >> outfile, j
+        #now merge ts file
+        mergets(tempdir, outputfilename+'.ts')
+        print >> sys.stdout, "\033[1:37;42mMerge all TS files:\033[0m complete."
 
-    purgetmpspace(tscachedir, mergedtsfilename)
+        ts2mp4(outputfilename)
+
+        print >> sys.stdout, "\033[1:37;42mMedia convert to MP4:\033[0m complete."
+        
+        setdownloadcomplete(url)
+
+        purgetmpspace(tempdir, outputfilename+'.ts')
     
-    print >> sys.stdout, "\033[1:37;42mDwonload:\033[0m complete."
+    print >> sys.stdout, "\033[1:37;42mAll task:\033[0m complete."
 
