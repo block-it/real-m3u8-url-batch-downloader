@@ -88,6 +88,8 @@ def generatedownloaduris(dir, url):
                 if len(line) > 0 :
                     if line.startswith('/') and len(uri)>7:
                         downuri.append('%s/%s\n'%(uri[:uri.find('/', 7)],line[1:]))
+                    elif line.startswith('http://'):
+                        downuri.append('%s\n'%(line))
                     else:
                         downuri.append('%s/%s\n'%(uri,line))
                     #print('%s/%s\n'%(uri,line))
@@ -100,6 +102,10 @@ def mergets(tscachedir, mergedtsfilename):
         for line in f:
             if line.startswith('http') and line[len(line)-2:]=='s\n':
                 ls.append(line[line.rindex('/'):][:-1]) 
+            else:
+                if line.startswith('http'): 
+                    #print line[:line.rindex('?')][line.rindex('/'):]
+                    ls.append(line[:line.rindex('?')][line.rindex('/'):])
     if(len(ls)>0):
         outputfile = open(mergedtsfilename, 'wb')
         for one in ls:         
@@ -211,9 +217,6 @@ def setdownloadcomplete(uri):
     with open('history.json', 'r+') as json_file: 
         data = json.load(json_file)
         for p in data['Resources']:
-            print p['URL']
-            print uri
-            print
             if p['state'] == 'downloading' and p['URL'] == uri:
                 p['state'] ='complete'
                 needwrite=True
