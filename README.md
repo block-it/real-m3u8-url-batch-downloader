@@ -5,7 +5,7 @@ this is a  m3u8 url batch download tool by a  python beginner.  Test in Windows,
 **Usage**:
     -u       m3u8 URL address,should be used with -o together
     -o       output media's name, should be used with -u together
-    -r       restore last uncomplete task
+    -r       restore all uncomplete task
     -s       show all history tasks
     -h       this message.
 ```

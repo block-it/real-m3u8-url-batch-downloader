@@ -31,7 +31,7 @@ class Usage(Exception):
         print >> sys.stderr, "\033[1:37;42mUsage:\033[0m"
         print >> sys.stderr,  " "*4, "   -u \t m3u8 URL address,should be used with -o together"
         print >> sys.stderr,  " "*4, "   -o \t output media's name, should be used with -u together"
-        print >> sys.stderr,  " "*4, "   -r \t restore last uncomplete task"
+        print >> sys.stderr,  " "*4, "   -r \t restore all uncomplete task"
         print >> sys.stderr,  " "*4, "   -s \t show history task"
         print >> sys.stderr,  " "*4, "   -h \t this message."
     
