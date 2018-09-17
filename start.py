@@ -32,12 +32,12 @@ class Usage(Exception):
         print >> sys.stderr,  " "*4, "   -u \t m3u8 URL address,should be used with -o together"
         print >> sys.stderr,  " "*4, "   -o \t output media's name, should be used with -u together"
         print >> sys.stderr,  " "*4, "   -r \t restore last uncomplete task"
-        print >> sys.stderr,  " "*4, "   -s \t show if exists uncomplete task"
+        print >> sys.stderr,  " "*4, "   -s \t show history task"
         print >> sys.stderr,  " "*4, "   -h \t this message."
     
 
 def parseargv(argv=None):
-    showuncomplete, restoreuncomplete=False,False
+    showtasks, restoreuncomplete=False,False
     url,outputfilename='',''
     try:
         try:
@@ -50,18 +50,17 @@ def parseargv(argv=None):
                 elif op == "-r":
                     restoreuncomplete=True
                 elif op == "-s":
-                    showuncomplete=True
+                    showtasks=True
                 elif op== "-h":
                     Usage()
                     sys.exit()
-            if restoreuncomplete == False and showuncomplete == False:
+            if restoreuncomplete == False and showtasks == False:
                 if  len(sys.argv)!=5:
                     Usage()
                     sys.exit()
-            elif showuncomplete == True:
-                sys.exit()
-                pass    #TODO: 显示上次没有完成的下载
-            return showuncomplete, restoreuncomplete,url,outputfilename
+            elif showtasks == True:
+                pass 
+            return showtasks, restoreuncomplete,url,outputfilename
         except getopt.error,msg:
             raise Usage(msg)
     except Usage:
@@ -207,10 +206,6 @@ def generatedownloadhistory(uri, outputfilename):
             print >> outfile, j
     pass
 
-#save download job
-def savedownloadjob():
-    pass
-
 def setdownloadcomplete(uri):
     needwrite=False
     data={}
@@ -235,16 +230,41 @@ def purgetmpspace(tscachedir, mergedtsfilename):
     os.remove(mergedtsfilename)
 
 #show uncomplete task
-def showuncompletetask():
-    pass
+def showtaskstask():
+#------------------------------------------------------------------------------------------------------------------------------------------
+#INDEX|  State     |   Start Time       |    File Locate     |          URL 
+#1    | downloading|2018-09-16 17:12:45 | D:\Movies\xxxx.mp4 | http://youku163.zuida-bofang.com/20180804/10904_06d1f97f/800k/hls/index.m3u8
+#-------------------------------------------------------------------------------------------------------------------------------------------
+    f = open('history.json')
+    i=0
+    data=json.load(f)
+    if len(data['Resources'])>0:
+        print "--------------------------------------------------------------------------------------------------------------------------------------"
+        print "INDEX|  State  |    Start Time       |           File Locate           |          URL "
+    for p in data['Resources']:
+        i += 1
+        print "%-5d|"%i,
+        if p['state']=='complete' :
+            print '\033[1;32;40m%s\033[0m|'%(p['state']),
+            #\033[1:37;42mGernerate Download History:\033[0m complete
+        else:
+            print p['state'],
+        print p['timestamp'],'|',
+        print '%(name)-30s|'%{'name':p['OPName'][:30]},
+        print "%(url)s"%{'url':p['URL'][:80]},
+        if len(p['URL']) >80: 
+            print '...' 
+        else: print '' 
+
+    f.close()
 
 if __name__ == "__main__":
     reload(sys) 
     sys.setdefaultencoding('utf8')    #fix utf8 character coding bug of python2.7 
-    showuncomplete, restoreuncomplete,url,outputfilename=parseargv()
+    showtasks, restoreuncomplete,url,outputfilename=parseargv()
     
-    if showuncomplete == True:
-        showuncompletetask()
+    if showtasks == True:
+        showtaskstask()
         sys.exit(0)
 
     if restoreuncomplete == True:
