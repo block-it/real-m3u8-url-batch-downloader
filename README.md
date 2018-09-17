@@ -22,7 +22,7 @@ for example, create a new online m3u8 download task, where m3u8 URI locate at ht
 
 2. auto merge all TS files and convert to a single MP4 file, and support specify path.
 
-3. continue download last uncomplete task.
+3. continue download all uncomplete tasks.
 
    `python start.py -r`
 
