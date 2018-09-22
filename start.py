@@ -87,7 +87,7 @@ def generatedownloaduris(dir, url):
                 if len(line) > 0 :
                     if line.startswith('/') and len(uri)>7:
                         downuri.append('%s/%s\n'%(uri[:uri.find('/', 7)],line[1:]))
-                    elif line.startswith('http://'):
+                    elif line.startswith('http://') or  line.startswith('https://'):
                         downuri.append('%s\n'%(line))
                     else:
                         downuri.append('%s/%s\n'%(uri,line))
@@ -295,7 +295,7 @@ if __name__ == "__main__":
         
         setdownloadcomplete(url)
 
-        purgetmpspace(tempdir, outputfilename+'.ts')
+        #purgetmpspace(tempdir, outputfilename+'.ts')
     
     print >> sys.stdout, "\033[1:37;42mAll task:\033[0m complete."
 
